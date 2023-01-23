@@ -22,7 +22,7 @@
 BLEService ledService( BLE_UUID_LED ); // BLE LED Service
 
 // Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
-BLEByteCharacteristic switchCharacteristic("2A57", BLERead | BLEWrite);  // Digital Output 
+BLEByteCharacteristic switchCharacteristic("2A57", BLEWrite);  // Digital Output 
 
 const int ledPin = LED_BUILTIN; // pin to use for the LED
 float x, y, z;
@@ -57,7 +57,7 @@ void setup() {
   BLE.setAdvertisedService(ledService);
 
   // add the characteristic to the service
-  ledService.addCharacteristic(switchCharacteristic);
+  ledService.addCharacteristic(switchCharacteristic);  // byte characteristic
 
   // add service
   BLE.addService(ledService);

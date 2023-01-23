@@ -20,63 +20,53 @@
 
 #define BLE_UUID_LED                        "180A"
 
-BLEService ledService( BLE_UUID_LED ); // BLE LED Service
+BLEService dataService( BLE_UUID_LED ); // BLE LED Service
 
-// Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
-BLEByteCharacteristic switchCharacteristic("2A57", BLERead | BLEWrite);  // Digital Output 
-BLEByteCharacteristic Xgyroscope("2A58", BLERead | BLEWrite); 
+// Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central 
+BLECharacteristic gyro_Characteristic("2A58", BLENotify, 50);  // Digital Output
+// BLEFloatCharacteristic gyro_Characteristic("2A58", BLENotify);
 
-const int ledPin = LED_BUILTIN; // pin to use for the LED
 float x, y, z;
 
 void setup() {
   Serial.begin(9600);  // returns nothing 
-  // Serial.print(Serial);
-  while (!Serial);
+
+  // Check if IMU is working
 
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while(1);    
   }
   else
+  {
     Serial.println("Initialized IMU!");
-
-  // set LED pin to output mode
-  // pinMode(ledPin, OUTPUT);
-
-  pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(LEDR, OUTPUT);
-  pinMode(LEDG, OUTPUT);
-  pinMode(LEDB, OUTPUT);
-
-  digitalWrite(LED_BUILTIN, LOW);  // when the central disconnects, turn off the LED
-  digitalWrite(LEDR, HIGH);        // will turn the LED off
-  digitalWrite(LEDG, HIGH);        // will turn the LED off
-  digitalWrite(LEDB, HIGH);        // will turn the LED off
+  }
 
   // begin initialization
   if (!BLE.begin()) {
     Serial.println("starting Bluetooth® Low Energy module failed!");
-
     while (1);
+  }
+    else
+  {
+    Serial.println("Initialized Bluetooth!");
   }
 
   // set advertised local name and service UUID:
   BLE.setLocalName("Nano 33 BLE");
-  BLE.setAdvertisedService(ledService);
+  BLE.setAdvertisedService(dataService);
 
-  // add the characteristic to the service
-  ledService.addCharacteristic(switchCharacteristic);
-  ledService.addCharacteristic(Xgyroscope);
+  /******************************************************
+    Data is written and read from characteristics
+      - add the characteristic to the service
+  ******************************************************/
+  dataService.addCharacteristic(gyro_Characteristic);  // 
 
   // add service
-  BLE.addService(ledService);
+  BLE.addService(dataService);
 
   // set the initial value for the characeristic:
-  switchCharacteristic.writeValue(0);
-  Xgyroscope.writeValue(0);
-
-  /* Data is written and read from characteristics */
+  gyro_Characteristic.writeValue("Test");  // Not sure if this works 
 
   // start advertising
   BLE.advertise();
@@ -105,54 +95,18 @@ void loop() {
       IMU.readGyroscope(x, y, z);
     }
 
-     // Convert the float to an unsigned char value between 0 and 255
-    // unsigned char charValue = map(x, 0.0, 255.0, 0, 255.0);  
-    // Xgyroscope.writeValue(charValue);
-    // Serial.println(charValue);
+    // Write x as float to characteristic
+    // gyro_Characteristic.setValue(x);
+    // gyro_Characteristic.writeValue(x);
 
-
-    if (switchCharacteristic.written() ) {
-    switch (switchCharacteristic.value()) {   // any value other than 0
-      case 01:
-        Serial.println("Red LED on");
-        digitalWrite(LEDR, LOW);          // will turn the LED on
-        digitalWrite(LEDG, HIGH);         // will turn the LED off
-        digitalWrite(LEDB, HIGH);         // will turn the LED off
-        Serial.print("x = ");
-        Serial.println(x);
-        break;
-      case 02:
-        Serial.println("Green LED on");
-        digitalWrite(LEDR, HIGH);         // will turn the LED off
-        digitalWrite(LEDG, LOW);          // will turn the LED on
-        digitalWrite(LEDB, HIGH);         // will turn the LED off
-        Serial.print("y = ");
-        Serial.println(y);
-        break;
-      case 03:
-        Serial.println("Blue LED on");
-        digitalWrite(LEDR, HIGH);         // will turn the LED off
-        digitalWrite(LEDG, HIGH);         // will turn the LED off
-        digitalWrite(LEDB, LOW);          // will turn the LED on
-        Serial.print("z = ");
-        Serial.println(z);
-        break;
-      default:
-        Serial.println(F("LEDs off"));
-        digitalWrite(LEDR, HIGH);         // will turn the LED off
-        digitalWrite(LEDG, HIGH);         // will turn the LED off
-        digitalWrite(LEDB, HIGH);         // will turn the LED off
-        break;
-        }
-      }
+    // Write x as string to characteristic 
+    char buffer[50]; 
+    sprintf(buffer, "x: %.2f y: %.2f, z: %.2f", x, y, z);  // print out multiple variables into string
+    gyro_Characteristic.writeValue(buffer);
+    
     }
-
+    
     // when the central disconnects, print it out:
     Serial.print(F("Disconnected from central: "));
-    Serial.println(central.address());
-    digitalWrite(LED_BUILTIN, LOW);
-    digitalWrite(LEDR, HIGH);
-    digitalWrite(LEDG, HIGH);
-    digitalWrite(LEDB, HIGH); 
   }
 }
