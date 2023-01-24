@@ -23,7 +23,7 @@
 BLEService dataService( BLE_UUID_LED ); // BLE LED Service
 
 // Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central 
-BLECharacteristic gyro_Characteristic("2A58", BLENotify, 50);  // Digital Output
+BLECharacteristic gyro_Characteristic("2A58", BLERead | BLENotify, 50);  // Digital Output
 // BLEFloatCharacteristic gyro_Characteristic("2A58", BLENotify);
 
 float x, y, z;
@@ -99,7 +99,7 @@ void loop() {
     // gyro_Characteristic.setValue(x);
     // gyro_Characteristic.writeValue(x);
 
-    // Write x as string to characteristic 
+    // Write x, y, z data as string to characteristic
     char buffer[50]; 
     sprintf(buffer, "x: %.2f y: %.2f, z: %.2f", x, y, z);  // print out multiple variables into string
     gyro_Characteristic.writeValue(buffer);
