@@ -107,6 +107,6 @@ void loop() {
     }
     
     // when the central disconnects, print it out:
-    Serial.print(F("Disconnected from central: "));
+    Serial.println(F("Disconnected from central: "));
   }
 }
