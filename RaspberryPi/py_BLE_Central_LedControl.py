@@ -82,4 +82,4 @@ else:
     print("\nnanoRP2040_Char NOT found!")
 #=============================================
 dev.disconnect()
-print("\n--- bye ---\n")
+print("\n--- bye ---\n") 
