@@ -30,7 +30,7 @@ float x, y, z;
 void setup() {
   Serial.begin(9600);
   // Serial.print(Serial);
-  while (!Serial);
+  // while (!Serial);
 
   // set LED pin to output mode
   // pinMode(ledPin, OUTPUT);
@@ -69,6 +69,7 @@ void setup() {
   BLE.advertise();
 
   Serial.println("BLE LED Peripheral");
+  Serial.println();
 }
 
 void loop() {
