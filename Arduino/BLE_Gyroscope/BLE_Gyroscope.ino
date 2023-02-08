@@ -1,8 +1,6 @@
 /*
-  LED
-
   This example creates a Bluetooth® Low Energy peripheral with service that contains a
-  characteristic to control an LED.
+  characteristic to read and write IMU data.
 
   The circuit:
   - Arduino MKR WiFi 1010, Arduino Uno WiFi Rev2 board, Arduino Nano 33 IoT,
