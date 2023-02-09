@@ -82,7 +82,6 @@ void loop() {
     Serial.print("Connected to central: ");
     // print the central's MAC address:
     Serial.println(central.address());
-    digitalWrite(LED_BUILTIN, HIGH);       // turn on the LED to indicate the connection
 
     // while the central is still connected to peripheral:
     while (central.connected()) {
