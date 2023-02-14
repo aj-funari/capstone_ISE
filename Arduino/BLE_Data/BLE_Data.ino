@@ -27,7 +27,7 @@ BLEService dataService("19B10000-E8F2-537E-4F6C-D104768A1214"); // create servic
 BLECharacteristic gyroCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify, 50);
 
 // variables to print gyroscope data
-float x, y, z;
+// float x, y, z;
 
 // varaibles for pitch calculation
 float accelX,            accelY,             accelZ,            // units m/s/s i.e. accelZ if often 9.8 (gravity)
@@ -41,10 +41,14 @@ float accelX,            accelY,             accelZ,            // units m/s/s i
 long lastTime;
 long lastInterval;
 
+// variables for force transducers
+int val_force;
+float voltage;
+
 void setup() {
   Serial.begin(9600);
 
-  // calibrate IMU
+  // calibrate IMU  --> causing sketch to fail when uploading 
   // calibrateIMU(250, 250);
   // lastTime = micros();
 
@@ -98,18 +102,17 @@ void loop() {
   // poll for Bluetooth® Low Energy events
   BLE.poll();
 
-  if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(x, y, z);
-    // Serial.print(x);
-    // Serial.print(" ");
-    // Serial.print(y);
-    // Serial.print(" ");
-    // Serial.println(z);
-  }
+  // if (IMU.gyroscopeAvailable()) {
+  //   IMU.readGyroscope(x, y, z);
+  //   // Serial.print(x);
+  //   // Serial.print(" ");
+  //   // Serial.print(y);
+  //   // Serial.print(" ");
+  //   // Serial.println(z);
+  // }
 
   // obtain pitch using gyro and acclerometer
-  if (
-    readIMU()) {
+  if (readIMU()) {
     long currentTime = micros();
     lastInterval = currentTime - lastTime; // expecting this to be ~104Hz +- 4%
     lastTime = currentTime;
@@ -124,10 +127,17 @@ void loop() {
   }
 
   // read force from analog pins
+  val_force = analogRead(A0);
+  voltage = val_force *(3.3/1023);
+  Serial.print("Digital force value reading = ");
+  Serial.println(val_force);
+  Serial.print("Digital voltage value reading = ");
+  Serial.println(voltage);
 
   // write data to bluetooth characteristic
   char buffer[50];
-  sprintf(buffer, "x: %.2f y: %.2f z: %.2f", complementaryRoll, complementaryPitch, complementaryYaw);  // print out multiple variables into string
+  // sprintf(buffer, "x: %.2f y: %.2f z: %.2f", x, y, z);
+  sprintf(buffer, "X: %.2f Y: %.2f Z: %.2f", complementaryRoll, complementaryPitch, complementaryYaw);  // print out multiple variables into string
   gyroCharacteristic.writeValue(buffer);
 }
 
