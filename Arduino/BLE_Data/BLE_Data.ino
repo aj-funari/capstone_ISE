@@ -30,16 +30,16 @@ BLECharacteristic gyroCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLE
 float x, y, z;
 
 // varaibles for pitch calculation
-// float accelX,            accelY,             accelZ,            // units m/s/s i.e. accelZ if often 9.8 (gravity)
-//       gyroX,             gyroY,              gyroZ,             // units dps (degrees per second)
-//       gyroDriftX,        gyroDriftY,         gyroDriftZ,        // units dps
-//       gyroRoll,          gyroPitch,          gyroYaw,           // units degrees (expect major drift)
-//       gyroCorrectedRoll, gyroCorrectedPitch, gyroCorrectedYaw,  // units degrees (expect minor drift)
-//       accRoll,           accPitch,           accYaw,            // units degrees (roll and pitch noisy, yaw not possible)
-//       complementaryRoll, complementaryPitch, complementaryYaw;  // units degrees (excellent roll, pitch, yaw minor drift)
+float accelX,            accelY,             accelZ,            // units m/s/s i.e. accelZ if often 9.8 (gravity)
+      gyroX,             gyroY,              gyroZ,             // units dps (degrees per second)
+      gyroDriftX,        gyroDriftY,         gyroDriftZ,        // units dps
+      gyroRoll,          gyroPitch,          gyroYaw,           // units degrees (expect major drift)
+      gyroCorrectedRoll, gyroCorrectedPitch, gyroCorrectedYaw,  // units degrees (expect minor drift)
+      accRoll,           accPitch,           accYaw,            // units degrees (roll and pitch noisy, yaw not possible)
+      complementaryRoll, complementaryPitch, complementaryYaw;  // units degrees (excellent roll, pitch, yaw minor drift)
 
-// long lastTime;
-// long lastInterval;
+long lastTime;
+long lastInterval;
 
 void setup() {
   Serial.begin(9600);
@@ -100,29 +100,35 @@ void loop() {
 
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
-    Serial.print(x);
-    Serial.print(" ");
-    Serial.print(y);
-    Serial.print(" ");
-    Serial.println(z);
+    // Serial.print(x);
+    // Serial.print(" ");
+    // Serial.print(y);
+    // Serial.print(" ");
+    // Serial.println(z);
   }
 
   // obtain pitch using gyro and acclerometer
-  // if (readIMU()) {
-  //   long currentTime = micros();
-  //   lastInterval = currentTime - lastTime; // expecting this to be ~104Hz +- 4%
-  //   lastTime = currentTime;
+  if (
+    readIMU()) {
+    long currentTime = micros();
+    lastInterval = currentTime - lastTime; // expecting this to be ~104Hz +- 4%
+    lastTime = currentTime;
 
-  //   doCalculations();
-  // }
-
-  // printCalculations();
+    doCalculations();
+    // Serial.print(complementaryRoll);
+    // Serial.print(',');
+    // Serial.print(complementaryPitch);
+    // Serial.print(',');
+    // Serial.print(complementaryYaw);
+    // Serial.println("");
+  }
 
   // read force from analog pins
 
-//   char buffer[50];
-//   sprintf(buffer, "x: %.2f y: %.2f, z: %.2f", x, y, z);  // print out multiple variables into string
-//   gyroCharacteristic.writeValue(buffer);
+  // write data to bluetooth characteristic
+  char buffer[50];
+  sprintf(buffer, "x: %.2f y: %.2f z: %.2f", complementaryRoll, complementaryPitch, complementaryYaw);  // print out multiple variables into string
+  gyroCharacteristic.writeValue(buffer);
 }
 
 /******************************************************
@@ -172,64 +178,64 @@ Initial Measurement Unit (IMU) Calculations
 - One function to calculate pitch
 - One function to print calculations 
 ******************************************************/
-// void calibrateIMU(int delayMillis, int calibrationMillis) {
+void calibrateIMU(int delayMillis, int calibrationMillis) {
 
-//   int calibrationCount = 0;
+  int calibrationCount = 0;
 
-//   delay(delayMillis); // to avoid shakes after pressing reset button
+  delay(delayMillis); // to avoid shakes after pressing reset button
 
-//   float sumX, sumY, sumZ;
-//   int startTime = millis();
-//   while (millis() < startTime + calibrationMillis) {
-//     if (readIMU()) {
-//       // in an ideal world gyroX/Y/Z == 0, anything higher or lower represents drift
-//       sumX += gyroX;
-//       sumY += gyroY;
-//       sumZ += gyroZ;
+  float sumX, sumY, sumZ;
+  int startTime = millis();
+  while (millis() < startTime + calibrationMillis) {
+    if (readIMU()) {
+      // in an ideal world gyroX/Y/Z == 0, anything higher or lower represents drift
+      sumX += gyroX;
+      sumY += gyroY;
+      sumZ += gyroZ;
 
-//       calibrationCount++;
-//     }
-//   }
+      calibrationCount++;
+    }
+  }
 
-//   if (calibrationCount == 0) {
-//     Serial.println("Failed to calibrate");
-//   }
+  if (calibrationCount == 0) {
+    Serial.println("Failed to calibrate");
+  }
 
-//   gyroDriftX = sumX / calibrationCount;
-//   gyroDriftY = sumY / calibrationCount;
-//   gyroDriftZ = sumZ / calibrationCount;
+  gyroDriftX = sumX / calibrationCount;
+  gyroDriftY = sumY / calibrationCount;
+  gyroDriftZ = sumZ / calibrationCount;
 
-// }
+}
 
-// bool readIMU() {
-//   if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable() ) {
-//     IMU.readAcceleration(accelX, accelY, accelZ);
-//     IMU.readGyroscope(gyroX, gyroY, gyroZ);
-//     return true;  // return true if IMU is available
-//   }
-//   return false;  // return false if IMU is unavailable
-// }
+bool readIMU() {
+  if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable() ) {
+    IMU.readAcceleration(accelX, accelY, accelZ);
+    IMU.readGyroscope(gyroX, gyroY, gyroZ);
+    return true;  // return true if IMU is available
+  }
+  return false;  // return false if IMU is unavailable
+}
 
-// void doCalculations() {
-//   accRoll = atan2(accelY, accelZ) * 180 / M_PI;
-//   accPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
+void doCalculations() {
+  accRoll = atan2(accelY, accelZ) * 180 / M_PI;
+  accPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
 
-//   float lastFrequency = (float) 1000000.0 / lastInterval;
-//   gyroRoll = gyroRoll + (gyroX / lastFrequency);
-//   gyroPitch = gyroPitch + (gyroY / lastFrequency);
-//   gyroYaw = gyroYaw + (gyroZ / lastFrequency);
+  float lastFrequency = (float) 1000000.0 / lastInterval;
+  gyroRoll = gyroRoll + (gyroX / lastFrequency);
+  gyroPitch = gyroPitch + (gyroY / lastFrequency);
+  gyroYaw = gyroYaw + (gyroZ / lastFrequency);
 
-//   gyroCorrectedRoll = gyroCorrectedRoll + ((gyroX - gyroDriftX) / lastFrequency);
-//   gyroCorrectedPitch = gyroCorrectedPitch + ((gyroY - gyroDriftY) / lastFrequency);
-//   gyroCorrectedYaw = gyroCorrectedYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
+  gyroCorrectedRoll = gyroCorrectedRoll + ((gyroX - gyroDriftX) / lastFrequency);
+  gyroCorrectedPitch = gyroCorrectedPitch + ((gyroY - gyroDriftY) / lastFrequency);
+  gyroCorrectedYaw = gyroCorrectedYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
 
-//   complementaryRoll = complementaryRoll + ((gyroX - gyroDriftX) / lastFrequency);
-//   complementaryPitch = complementaryPitch + ((gyroY - gyroDriftY) / lastFrequency);
-//   complementaryYaw = complementaryYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
+  complementaryRoll = complementaryRoll + ((gyroX - gyroDriftX) / lastFrequency);
+  complementaryPitch = complementaryPitch + ((gyroY - gyroDriftY) / lastFrequency);
+  complementaryYaw = complementaryYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
 
-//   complementaryRoll = 0.98 * complementaryRoll + 0.02 * accRoll;
-//   complementaryPitch = 0.98 * complementaryPitch + 0.02 * accPitch;
-// }
+  complementaryRoll = 0.98 * complementaryRoll + 0.02 * accRoll;
+  complementaryPitch = 0.98 * complementaryPitch + 0.02 * accPitch;
+}
 
 // void printCalculations() {
 //   //Serial.print(gyroRoll);
