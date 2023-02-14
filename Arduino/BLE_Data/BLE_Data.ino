@@ -23,11 +23,10 @@
 BLEService dataService("19B10000-E8F2-537E-4F6C-D104768A1214"); // create service
 
 // create gyro characteristic and allow remote device to read, write, and notify
-// BLEByteCharacteristic gyroCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
-BLECharacteristic gyroCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify, 50);
-
-// variables to print gyroscope data
-// float x, y, z;
+BLECharacteristic dataCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify, 50);  // passing data as strinng
+// BLEFloatCharacteristic imuCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify);  // pass data as float 
+// BLEFloatCharacteristic forceOneCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify); // pass data as float
+// BLEFloatCharacteristic forceTwoCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify); // pass data as float
 
 // varaibles for pitch calculation
 float accelX,            accelY,             accelZ,            // units m/s/s i.e. accelZ if often 9.8 (gravity)
@@ -42,8 +41,8 @@ long lastTime;
 long lastInterval;
 
 // variables for force transducers
-int val_force;
-float voltage;
+int forceOne, forceTwo;
+float voltageOne, voltageTwo;
 
 void setup() {
   Serial.begin(9600);
@@ -69,7 +68,7 @@ void setup() {
   Serial.print("Service UUID:\t\t ");
   Serial.println(dataService.uuid());
   Serial.print("Characteristic UUID:\t ");
-  Serial.println(gyroCharacteristic.uuid());
+  Serial.println(dataCharacteristic.uuid());
   Serial.println();
 
   // set the local name peripheral advertises
@@ -77,8 +76,16 @@ void setup() {
   // set the UUID for the service this peripheral advertises
   BLE.setAdvertisedService(dataService);
 
-  // add the characteristic to the service
-  dataService.addCharacteristic(gyroCharacteristic);
+  /* add single characteristic to the Bluetooth service; 
+     uncomment when writing array to Bluetooth characteristic */
+  dataService.addCharacteristic(dataCharacteristic);
+
+  /* add three characteristics to Bluetooth service
+     uncomment when writing three separate float values to 
+     Bluetooth characteristics */
+  // dataService.addCharacteristic(imuCharacteristic);
+  // dataService.addCharacteristic(forceOneCharacteristic);
+  // dataService.addCharacteristic(forceTwoCharacteristic);
 
   // add service
   BLE.addService(dataService);
@@ -102,15 +109,6 @@ void loop() {
   // poll for Bluetooth® Low Energy events
   BLE.poll();
 
-  // if (IMU.gyroscopeAvailable()) {
-  //   IMU.readGyroscope(x, y, z);
-  //   // Serial.print(x);
-  //   // Serial.print(" ");
-  //   // Serial.print(y);
-  //   // Serial.print(" ");
-  //   // Serial.println(z);
-  // }
-
   // obtain pitch using gyro and acclerometer
   if (readIMU()) {
     long currentTime = micros();
@@ -127,18 +125,25 @@ void loop() {
   }
 
   // read force from analog pins
-  val_force = analogRead(A0);
-  voltage = val_force *(3.3/1023);
-  Serial.print("Digital force value reading = ");
-  Serial.println(val_force);
-  Serial.print("Digital voltage value reading = ");
-  Serial.println(voltage);
+  forceOne = analogRead(A0);
+  voltageOne = forceOne * (3.3/1023);
+  forceTwo = analogRead(A1);
+  voltageTwo = forceTwo * (3.3/1023);
+  // Serial.print("Digital force value reading = ");
+  // Serial.println(val_force);
+  // Serial.print("Digital voltage value reading = ");
+  // Serial.println(voltage);
 
-  // write data to bluetooth characteristic
-  char buffer[50];
-  // sprintf(buffer, "x: %.2f y: %.2f z: %.2f", x, y, z);
-  sprintf(buffer, "X: %.2f Y: %.2f Z: %.2f", complementaryRoll, complementaryPitch, complementaryYaw);  // print out multiple variables into string
-  gyroCharacteristic.writeValue(buffer);
+  // Pass data to characteristic using array
+  char buffer[9];  // maximim string length: "-xxx x x\0" 
+  sprintf(buffer, "%.0f %.0f %.0f", complementaryPitch, voltageOne, voltageTwo);  // print out multiple variables into string
+
+  dataCharacteristic.writeValue(buffer);
+
+  // Pass data to three characteristics as floats
+  // imuCharacteristic.writeValue(complementaryPitch);
+  // forceOneCharacteristic.writeValue(voltageOne);
+  // forceTwoCharacteristic.writeValue(voltageTwo);
 }
 
 /******************************************************
@@ -146,6 +151,11 @@ Bluetooth Functions
 - One function to handle connection
 - One function to handle disconnection
 ******************************************************/
+/*
+Will printing to the screen inside bluetooth handler slow
+the code down?
+"""
+*/
 void blePeripheralConnectHandler(BLEDevice central) {
   // central connected event handler
   Serial.print("Connected event, central: ");
