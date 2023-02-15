@@ -9,12 +9,14 @@ Connect to Peripheral with matched MAC.
 Check for service uuid and characteristic uuid,
 if matched found: read data from characteristic
 """
-
+import pyKey
 from bluepy import btle
-import time
+
 
 # Must match with Peripheral
-MAC = "a8:8f:15:63:27:d2"
+#AJ Arduino MAC a8:8f:15:63:27:d2
+#Actual Arduino MAC 66:46:6d:83:a5:c8
+MAC = "66:46:6d:83:a5:c8"
 SERVICE_UUID = "19B10000-E8F2-537E-4F6C-D104768A1214"
 CHARACTERISTIC_UUID = "19B10001-E8F2-537E-4F6C-D104768A1214"
 
@@ -47,20 +49,46 @@ print(characteristics)
 
 while(dev):
     for char in characteristics:
-        # print("----------")
-        # print(type(char))
-        # print(char)
-        # print(char.uuid)
         if(char.uuid == CHARACTERISTIC_UUID ):
-            # print("=== !CHARACTERISTIC_UUID matched! ==")
-            # nanoRP2040_Char = char
-            # print(char)
-            # print(dir(char))
-            # print(char.getDescriptors)
-            # print(char.propNames)
-            # print(char.properties)
-            # print(type(char.read()))
-            print(char.read())
+            #(pitch) (reset) (jump) 
+            data = (char.read()).decode("utf-8")
+
+            # Offset by 2 to bypass the b'
+            i = 0
+            #Run through a while loop to get all the pitch data, This is necessary since it is variable in size
+            pitch = ""
+            while(data[i] != " "):
+                pitch += data[i]
+                i += 1
+            # We now have all of pitch, this is variable however, ranging from a size of 1 to 4
+            # Now we need to grab the jump and reset button, these can only be size 1
+            # Offset by 1 as if we don't we'll grab the whitespace
+            jump = data[i+1]
+            # NOTE an offset of 2 from the jump, this is to account for whitespace
+            reset = data[i+3]
+            
+            # These values are turned into ints
+            pitch_i = int(pitch)
+            jump_i = int(jump)
+            reset_i = int(reset)
+            
+            #Control loop
+            if(pitch_i > 20):
+                #Use pressKey ONLY for moving laterally
+                # You MUST releaseKey if you use pressKey
+                pyKey.pressKey("RIGHT")
+            elif(pitch_i < -20):
+                pyKey.pressKey("LEFT")
+            else:
+                pyKey.releaseKey("RIGHT")
+                pyKey.releaseKey("LEFT")
+            if(jump_i > 0):
+                #press does a quick "tap" of the key, use for buttons
+                pyKey.press("SPACEBAR")
+            if(reset_i > 0):
+                pyKey.press("r")
+
+            
 
 # Disconnect with Peripheral 
 # dev.disconnect()
