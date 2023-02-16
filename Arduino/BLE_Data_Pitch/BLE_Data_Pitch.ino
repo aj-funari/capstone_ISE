@@ -135,7 +135,7 @@ void loop() {
   // Serial.println(voltage);
 
   // Pass data to characteristic using array
-  char buffer[9];  // maximim string length: "-xxx x x\0" 
+  char buffer[14];  // maximim string length: "-xxx xxxx xxxx\0" 
   sprintf(buffer, "%.0f %.0f %.0f", complementaryPitch, voltageOne, voltageTwo);  // print out multiple variables into string
 
   dataCharacteristic.writeValue(buffer);
