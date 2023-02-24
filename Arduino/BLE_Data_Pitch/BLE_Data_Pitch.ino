@@ -18,7 +18,7 @@
 
 #include <ArduinoBLE.h>
 #include <Arduino_LSM9DS1.h>
-#include <Math.h>
+// #include <Math.h>
 // #include <math.h>
 
 BLEService dataService("19B10000-E8F2-537E-4F6C-D104768A1214"); // create service
