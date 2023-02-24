@@ -18,7 +18,8 @@
 
 #include <ArduinoBLE.h>
 #include <Arduino_LSM9DS1.h>
-// #include <Math.h>
+#include <Math.h>
+// #include <math.h>
 
 BLEService dataService("19B10000-E8F2-537E-4F6C-D104768A1214"); // create service
 
@@ -35,7 +36,8 @@ float accelX,            accelY,             accelZ,            // units m/s/s i
       gyroRoll,          gyroPitch,          gyroYaw,           // units degrees (expect major drift)
       gyroCorrectedRoll, gyroCorrectedPitch, gyroCorrectedYaw,  // units degrees (expect minor drift)
       accRoll,           accPitch,           accYaw,            // units degrees (roll and pitch noisy, yaw not possible)
-      complementaryRoll, complementaryPitch, complementaryYaw;  // units degrees (excellent roll, pitch, yaw minor drift)
+      complementaryRoll, complementaryPitch, complementaryYaw,  // units degrees (excellent roll, pitch, yaw minor drift)
+      pitch;
 
 long lastTime;
 long lastInterval;
@@ -43,6 +45,11 @@ long lastInterval;
 // variables for force transducers
 int forceOne, forceTwo;
 float voltageOne, voltageTwo;
+
+// calculate runtime
+unsigned long loopStartTime = 0;
+unsigned long loopEndTime = 0;
+unsigned long loopDuration = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -106,6 +113,7 @@ void setup() {
 }
 
 void loop() {
+  // loopStartTime = micros();
   // poll for Bluetooth® Low Energy events
   BLE.poll();
 
@@ -115,7 +123,9 @@ void loop() {
     lastInterval = currentTime - lastTime; // expecting this to be ~104Hz +- 4%
     lastTime = currentTime;
 
-    doCalculations();
+    pitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
+
+    // doCalculations();
     // Serial.print(complementaryRoll);
     // Serial.print(',');
     // Serial.print(complementaryPitch);
@@ -125,20 +135,25 @@ void loop() {
   }
 
   // read force from analog pins
-  forceOne = analogRead(A0);
-  voltageOne = forceOne * (3.3/1023);
-  forceTwo = analogRead(A1);
-  voltageTwo = forceTwo * (3.3/1023);
+  forceOne = analogRead(A6);
+  voltageOne = forceOne / 100;
+  forceTwo = analogRead(A7);
+  voltageTwo = forceTwo / 100;
   // Serial.print("Digital force value reading = ");
-  // Serial.println(val_force);
+  // Serial.println(voltageOne);
   // Serial.print("Digital voltage value reading = ");
-  // Serial.println(voltage);
+  // Serial.println(voltageTwo);
 
   // Pass data to characteristic using array
-  char buffer[14];  // maximim string length: "-xxx xxxx xxxx\0" 
-  sprintf(buffer, "%.0f %.0f %.0f", complementaryPitch, voltageOne, voltageTwo);  // print out multiple variables into string
+  char buffer[20];  // maximim string length: "-xxx xxxx xxxx\0"
+  // sprintf(buffer, "%.0f %.0f", voltageOne, voltageTwo);
+  sprintf(buffer, "%.0f %.0f %.0f", pitch, voltageOne, voltageTwo);  // print out multiple variables into string
 
   dataCharacteristic.writeValue(buffer);
+
+  // loopEndTime = micros();
+  // loopDuration = loopEndTime - loopStartTime;
+  // Serial.println(loopDuration);
 
   // Pass data to three characteristics as floats
   // imuCharacteristic.writeValue(complementaryPitch);
@@ -237,23 +252,24 @@ bool readIMU() {
 }
 
 void doCalculations() {
-  accRoll = atan2(accelY, accelZ) * 180 / M_PI;
+  // accRoll = atan2(accelY, accelZ) * 180 / M_PI;
   accPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
 
+  // float lastFrequency = (float) 1.0 / lastInterval;
   float lastFrequency = (float) 1000000.0 / lastInterval;
-  gyroRoll = gyroRoll + (gyroX / lastFrequency);
+  // gyroRoll = gyroRoll + (gyroX / lastFrequency);
   gyroPitch = gyroPitch + (gyroY / lastFrequency);
-  gyroYaw = gyroYaw + (gyroZ / lastFrequency);
+  // gyroYaw = gyroYaw + (gyroZ / lastFrequency);
 
-  gyroCorrectedRoll = gyroCorrectedRoll + ((gyroX - gyroDriftX) / lastFrequency);
-  gyroCorrectedPitch = gyroCorrectedPitch + ((gyroY - gyroDriftY) / lastFrequency);
-  gyroCorrectedYaw = gyroCorrectedYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
+  // gyroCorrectedRoll = gyroCorrectedRoll + ((gyroX - gyroDriftX) / lastFrequency);
+  // gyroCorrectedPitch = gyroCorrectedPitch + ((gyroY - gyroDriftY) / lastFrequency);
+  // gyroCorrectedYaw = gyroCorrectedYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
 
-  complementaryRoll = complementaryRoll + ((gyroX - gyroDriftX) / lastFrequency);
+  // complementaryRoll = complementaryRoll + ((gyroX - gyroDriftX) / lastFrequency);
   complementaryPitch = complementaryPitch + ((gyroY - gyroDriftY) / lastFrequency);
-  complementaryYaw = complementaryYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
+  // complementaryYaw = complementaryYaw + ((gyroZ - gyroDriftZ) / lastFrequency);
 
-  complementaryRoll = 0.98 * complementaryRoll + 0.02 * accRoll;
+  // complementaryRoll = 0.98 * complementaryRoll + 0.02 * accRoll;
   complementaryPitch = 0.98 * complementaryPitch + 0.02 * accPitch;
 }
 
