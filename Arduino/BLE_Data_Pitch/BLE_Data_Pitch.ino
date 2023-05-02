@@ -50,7 +50,7 @@ void setup() {
   // set the local name peripheral advertises
   BLE.setLocalName("ArduinoData");
 
-  // set the UUID for the service this peripheral advertises
+  // set the UUID for the service
   BLE.setAdvertisedService(dataService);
 
   // add characteristic to Bluetooth service;
@@ -76,24 +76,29 @@ void loop() {
   // calculate roll
   if (readIMU()) {
     roll = atan2(-accelY, sqrt(accelX * accelX + accelZ * accelZ)) * 180 / M_PI;
-    // pitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
+    pitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
+    Serial.print("roll: ");
+    Serial.print(roll);
+    Serial.print(" ");
+    Serial.print("pitch: ");
+    Serial.println(pitch);
   }
 
   // read force from analog pins
-  forceOne = analogRead(A0);
-  voltageOne = forceOne / 5;
-  forceTwo = analogRead(A1);
-  voltageTwo = forceTwo / 5;
+  // forceOne = analogRead(A0);
+  // voltageOne = forceOne / 5;
+  // forceTwo = analogRead(A1);
+  // voltageTwo = forceTwo / 5;
 
   // send 0 or 1 
-  if(voltageOne > 0)
-    voltageOne = 1;
-  if(voltageTwo > 0)
-    voltageTwo = 1;
+  // if(voltageOne > 0)
+  //   voltageOne = 1;
+  // if(voltageTwo > 0)
+  //   voltageTwo = 1;
 
   // Pass data to characteristic using array
-  char buffer[20];  // maximim string length: "-xxx xxxx xxxx\0"
-  sprintf(buffer, "%.0f %.0f %.0f", roll, voltageOne, voltageTwo);  // print out multiple variables into strin
+  char buffer[10];  // maximim string length: "-xxx xxxx xxxx\0"
+  sprintf(buffer, "%.0f %.0f %.0f", roll, pitch);  // print out multiple variables into strin
   
   // write data to characteristic
   dataCharacteristic.writeValue(buffer);
