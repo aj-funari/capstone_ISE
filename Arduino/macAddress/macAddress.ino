@@ -13,11 +13,11 @@ void setup() {
   // Serial.print("Arduino Nano connected on port: ");
   // Serial.println(Serial.port());
 
-  Serial.print("Peripheral MAC address: ");
-  Serial.println(BLE.address());
+  // Serial.print("Peripheral MAC address: ");
+  // Serial.println(BLE.address());
 }
 
 void loop() {
-  // Serial.print("Peripheral MAC address: ");
-  // Serial.println(BLE.address());
+  Serial.print("Peripheral MAC address: ");
+  Serial.println(BLE.address());
 }

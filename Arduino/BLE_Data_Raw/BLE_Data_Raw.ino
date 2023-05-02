@@ -22,6 +22,11 @@ float accelX,            accelY,             accelZ,            // units m/s/s i
 int forceOne, forceTwo;
 float voltageOne, voltageTwo;
 
+// calculate runtime
+unsigned long loopStartTime = 0;
+unsigned long loopEndTime = 0;
+unsigned long loopDuration = 0;
+
 void setup() {
   Serial.begin(9600);
 
@@ -72,6 +77,7 @@ void setup() {
 }
 
 void loop() {
+  loopStartTime = micros();
   // poll for Bluetooth® Low Energy events
   BLE.poll();
 
@@ -90,11 +96,15 @@ void loop() {
   // Pass data to characteristic using array
   char buffer[50];  // maximim string length: "-xxx xxxx xxxx\0" 
   sprintf(buffer, "%.0f %.0f %.0f %.0f %.0f %.0f %.0f %.0f", 
-                                      voltageOne, voltageTwo,
-                                      accelX, accelY, accelZ,
-                                      gyroX, gyroY, gyroZ);  // print out multiple variables into string
+                                      gyroX, gyroY, gyroZ,      // angular rate
+                                      accelX, accelY, accelZ,   // acceleromter
+                                      voltageOne, voltageTwo);  // voltage
 
   dataCharacteristic.writeValue(buffer);
+
+  loopEndTime = micros();
+  loopDuration = loopEndTime - loopStartTime;
+  Serial.println(loopDuration);
 }
 
 /******************************************************
