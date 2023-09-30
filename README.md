@@ -6,7 +6,7 @@
 ## 2) Bluetooth Low Energy
 ###   - Send data (Gyroscope/Force) to Raspberry Pi
 ### 3) Build wearable device
-###   - 3D Printer
+###   - 3D printer
 ###   - Laser cutter
 ## 3) Demonstration
 ###   - Real world testing
