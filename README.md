@@ -1,3 +1,4 @@
-# Bluetooth
-## Bluetooth Low Energy is utilized in our wearable device by transmitting
-## raw Gyroscope/Force data between an Arduino and Raspberry Pi
+# Senior Design Capstone - uMove
+## 1) Bluetooth Low Energy
+## 2) Wearable Device
+## 3) Demonstration
