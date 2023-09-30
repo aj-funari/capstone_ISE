@@ -50,7 +50,7 @@ print(characteristics)
 while(dev):
     for char in characteristics:
         if(char.uuid == CHARACTERISTIC_UUID ):
-            #(pitch) (reset) (jump) 
+            # (roll) (jump) (reset) 
             data = (char.read()).decode("utf-8")
 
             # Offset by 2 to bypass the b'
