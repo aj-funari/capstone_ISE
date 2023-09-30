@@ -1,6 +1,4 @@
-# capstone_Arduino
-
-### This repository is meant for software development on an Arduino Nano
+# Arduino
 
 ## 1) Data Collection
 ###   - Gyroscope
